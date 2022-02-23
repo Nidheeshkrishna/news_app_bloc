@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_3/bloc/article_bloc.dart';
-
 import 'package:flutter_application_3/bloc/article_event.dart';
 import 'package:flutter_application_3/bloc/article_state.dart';
 import 'package:flutter_application_3/model/api_result_model.dart';
@@ -23,7 +22,8 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     //var blocProvider = BlocProvider;
     articleBloc = BlocProvider.of(context);
-    articleBloc!.add(FetchArticlesEvent());
+    //articleBloc!.add(FetchArticlesEvent());
+    BlocProvider.of<ArticleBloc>(context).add(FetchArticlesEvent());
 
     //  squareBloc = SquareBloc(homeRepo);
     // squareBloc.add(FetchSquares(1));
@@ -31,63 +31,48 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Builder(
-        builder: (context) {
-          var blocBuilder = BlocBuilder<ArticleBloc, ArticleState>(
-            builder: (context, state) {
-              if (state is ArticleInitialState) {
-                return buildLoading();
-              } else if (state is ArticleLoadingState) {
-                return buildLoading();
-              } else if (state is ArticleLoadedState) {
-                return buildArticleList(state.articles);
-              } else if (state is ArticleErrorState) {
-                return buildErrorUi(state.message);
-              } else {
-                return Container();
-              }
-            },
-          );
-          return Material(
-            child: Scaffold(
-              appBar: AppBar(
-                title: Text("Cricket"),
-                actions: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.refresh),
-                    onPressed: () {
-                      articleBloc!.add(FetchArticlesEvent());
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.info),
-                    onPressed: () {
-                      navigateToAoutPage(context);
-                    },
-                  )
-                ],
-              ),
-              body: Container(
-                child: BlocListener<ArticleBloc, ArticleState>(
-                  listener: (context, state) {
-                    if (state is ArticleErrorState) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          duration: Duration(milliseconds: 300),
-                        ),
-                      );
-                    }
-                  },
-                  child: blocBuilder,
-                ),
-              ),
+    return Scaffold(
+        appBar: AppBar(
+          title: Text("Cricket"),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () {
+                articleBloc!.add(FetchArticlesEvent());
+              },
             ),
-          );
-        },
-      ),
-    );
+            IconButton(
+              icon: Icon(Icons.info),
+              onPressed: () {
+                navigateToAoutPage(context);
+              },
+            )
+          ],
+        ),
+        body:
+            BlocConsumer<ArticleBloc, ArticleState>(listener: (context, state) {
+          if (state is ArticleErrorState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                duration: Duration(milliseconds: 300),
+              ),
+            );
+          }
+        }, builder: (context, state) {
+          if (state is ArticleInitialState) {
+            return buildLoading();
+          } else if (state is ArticleLoadingState) {
+            return buildLoading();
+          } else if (state is ArticleLoadedState) {
+            return buildArticleList(state.articles);
+          } else if (state is ArticleErrorState) {
+            return buildErrorUi(state.message);
+          } else {
+            return Container();
+            //         }
+          }
+        }));
   }
 
   Widget buildLoading() {
